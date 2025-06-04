@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## 🏎️ Track Racing Game (Pygame)
 
 A simple 2D top-down racing game built with **Python** and **Pygame**, where the car moves and rotates on a static track. This version features car controls, collision with track borders, and finish line detection.
@@ -73,3 +74,59 @@ python main.py
 * [ ] Main menu and restart option
 
 
+=======
+🏗️ Pygame Car Racing (WIP)
+
+🚧 This project is under development.
+Currently building a top-down 2D racing game using Python and Pygame.
+
+🎯 Goal
+Create a fully playable car racing game with:
+
+Keyboard-based car control
+
+Collision detection
+
+Lap system
+
+AI opponents (planned)
+
+
+✅ Current Progress
+ Basic game window setup
+
+ Background and track rendering
+
+ Player car movement and rotation
+
+
+📁 Structure (so far)
+bash
+Copy
+Edit
+pygame_car_racer/
+├── Images/imgs/          # Game assets (track, cars, etc.)
+├── main.py               # Main game logic
+├── utils.py              # Helper functions (blit, scaling)
+└── README.md             # This file
+
+
+🕹️ Controls
+
+W: Move forward
+
+A: Rotate left
+
+S: Move backward
+
+D: Rotate right
+
+
+🛠️ Tech Stack
+Python 3.x
+
+Pygame
+
+
+📌 Notes
+This is a learning project — more features and structure will be added as development continues.
