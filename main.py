@@ -1,12 +1,14 @@
 import pygame
 import time
 import math
+import sys
 
+pygame.init()
 
 from utils import resize_image,rotate_center
 
-grass            = resize_image(pygame.image.load('Images/imgs/grass.jpg'),  2.5)
-track            = resize_image(pygame.image.load('Images/imgs/track.png'),  0.9)
+grass = resize_image(pygame.image.load('Images/imgs/grass.jpg'),  2.5)
+track = resize_image(pygame.image.load('Images/imgs/track.png'),  0.9)
 
 track_border     = resize_image(pygame.image.load('Images/imgs/track-border.png'),  0.9)
 track_border_mask = pygame.mask.from_surface(track_border)
@@ -35,7 +37,7 @@ images = [
 ]
 
 class Abstract_Car:
-    
+
     def __init__(self,max_velocity,rotating_velocity):
         self.car_img = self.car_img
         self.max_vel = max_velocity
@@ -83,9 +85,16 @@ class Abstract_Car:
         return poi
         
     def reset(self):
-        self.starting_vel = 4
+        global count_signals
         self.angle = 0
         self.x ,self.y = self.start_pos
+
+    def reset_after_closure(self):
+        global count_signals
+        self.angle = 0
+        self.x ,self.y = self.start_pos
+        Computer_Car.reset_current_path(self)
+        count_signals = 0
 
 
 
@@ -119,7 +128,7 @@ class Player_Car(Abstract_Car):
 
         self.move()  # Reverse the direction and slow down 
 
-PATH = [(161, 105), (117, 68), (67, 100), (61, 351), (70, 477), (177, 595), (309, 723), (405, 706), (429, 501), (514, 462), (605, 536), (613, 708), (731, 717), (747, 426), (650, 365), (414, 353), (428, 258), (709, 254), (748, 160), (704, 73), (331, 75), (277, 143), (281, 330), (240, 411), (172, 360), (171, 280)]
+PATH = [(175, 119), (110, 70), (56, 133), (70, 481), (318, 731), (404, 680), (418, 521), (507, 475), (600, 551), (613, 715), (736, 713), (734, 399), (611, 357), (409, 343), (433, 257), (697, 258), (738, 123), (581, 71), (303, 78), (275, 377), (176, 388), (178, 280)]
 
 class Computer_Car(Abstract_Car):
     car_img =  com_car
@@ -138,7 +147,7 @@ class Computer_Car(Abstract_Car):
 
     def draw(self, WIN):
         super().draw(WIN)
-        # Computer_Car.draw_points(self,WIN)    # This was done to get the positions for movement of Computer_Car
+        Computer_Car.draw_points(self,WIN)    # This was done to get the positions for movement of Computer_Car
 
 
     def calculate_angle(self):
@@ -167,9 +176,12 @@ class Computer_Car(Abstract_Car):
     
         target = self.path[self.current_point]
         rect = pygame.Rect(
-            self.x, self.y, self.car_img.get_width(), self.car_img.get_height())
+        self.x, self.y, self.car_img.get_width(), self.car_img.get_height())
         if rect.collidepoint(*target):
             self.current_point += 1
+        
+        if self.current_point>=len(self.path):
+            self.current_point = 0
 
 
     def move_computer_car(self):
@@ -180,9 +192,9 @@ class Computer_Car(Abstract_Car):
         self.update_path_point()
         super().move()
 
+    def reset_current_path(self):
+        self.current_point = 0
 
-def collision_of_vehicles(player_car,computer_car):
-    pass
 
 
 def draw(WIN,images,player_car,computer_car):
@@ -197,38 +209,138 @@ def draw(WIN,images,player_car,computer_car):
 player_car = Player_Car(4,4) #Sends velocity and rotating velocity to _init_ of abstract car method (object)
 computer_car = Computer_Car(4,5.5,PATH)
 
-while run:
 
-    clock.tick(60)  
+
+
+FONTS = pygame.font.SysFont("Comic Sans MS", 48)
+FONTS_NUM = pygame.font.SysFont("Impact",80)
+
+def draw_menu(WIN):
+    WIN.fill((0, 0, 0))  # Black background
+
+    label_play = FONTS.render("Press ENTER to Play", True, (255, 255, 255))
+    label_options = FONTS.render("Press SPACE for Options", True, (255, 255, 255))
+    label_quit = FONTS.render("Press ESC to Quit", True, (255, 255, 255))
+
+    WIN.blit(label_play, ((TRACK_WIDTH - label_play.get_width()) // 2, TRACK_HEIGHT // 2 - 60))
+    WIN.blit(label_options, ((TRACK_WIDTH - label_options.get_width()) // 2, TRACK_HEIGHT // 2))
+    WIN.blit(label_quit, ((TRACK_WIDTH - label_quit.get_width()) // 2, TRACK_HEIGHT // 2 + 60))
+
+    pygame.display.flip()
+
+def menu_loop():
+    clock = pygame.time.Clock()
+
+    while True:
+        draw_menu(WIN)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "Quit"
+              
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return "Play"
+                elif event.key == pygame.K_ESCAPE:
+                    return "Quit"
+                elif event.key == pygame.K_SPACE:
+                    return "Options"
+
+        clock.tick(60)
+
+
+count_signals = 0
+
+def draw_signals(WIN):
+
+    global count_signals
+
+    labels = [
+        FONTS_NUM.render("3", True, (255, 255, 255)),
+        FONTS_NUM.render("2", True, (255, 255, 255)),
+        FONTS_NUM.render("1", True, (255, 255, 255))
+    ]
+
+    for label in labels:
+
+        x = (TRACK_WIDTH - label.get_width()) // 2
+        y = (TRACK_HEIGHT - label.get_height()) // 2
+
+
+        center_x = TRACK_WIDTH // 2
+        center_y = TRACK_HEIGHT // 2
+        pygame.draw.circle(WIN, (255, 0, 0), (center_x, center_y), 90)
+
+
+        WIN.blit(label, (x, y))
+
+        pygame.display.update()
+        pygame.time.delay(1000)
+
+        count_signals+=1
+
+ 
     
 
-    draw(WIN,images,player_car,computer_car)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
+def game_loop():
+    run = True
 
-    computer_car.draw_points(WIN)
-
-    player_car.move_player_car()
-    computer_car.move_computer_car()
-    
-    if player_car.collide(track_border_mask) != None: #Since value is none when object isnt colliding
-        player_car.bounce()
-
-
-    computer_point_of_collision_finish = computer_car.collide(finish_line_mask,130,250)
-    if computer_point_of_collision_finish != None:
-        computer_car.reset()
+    while run:
+        clock.tick(60)
         
-    
+        draw(WIN,images,player_car,computer_car)
+        
+        if count_signals!=3:
+            draw_signals(WIN)        
+        
 
-    player_point_of_collision_finish = player_car.collide(finish_line_mask,130,250)
-    if player_point_of_collision_finish != None:
-        if player_point_of_collision_finish[1] == 0:    #If Player tries to cross finish line from forward (the co-ordinate of y component is 0 at that position) then the player bounces back
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+
+
+        computer_car.draw_points(WIN)
+
+        player_car.move_player_car()
+        computer_car.move_computer_car()
+        
+        if player_car.collide(track_border_mask) != None: #Since value is none when object isnt colliding
             player_car.bounce()
-        else:
-            player_car.reset()
 
-     
-pygame.quit
+
+        computer_point_of_collision_finish = computer_car.collide(finish_line_mask,130,250)
+        if computer_point_of_collision_finish != None:
+            computer_car.reset()
+            
+        
+
+        player_point_of_collision_finish = player_car.collide(finish_line_mask,130,250)
+        if player_point_of_collision_finish != None:
+            if player_point_of_collision_finish[1] == 0:    #If Player tries to cross finish line from forward (the co-ordinate of y component is 0 at that position) then the player bounces back
+                player_car.bounce()
+            else:
+                player_car.reset()
+    
+    player_car.reset_after_closure()
+    computer_car.reset_after_closure()
+
+
+
+def main():
+    while True:
+        choice = menu_loop()
+        if choice == "Play":
+            game_loop()
+        elif choice == "Options":
+            print("Options not implemented yet.")
+        elif choice == "Quit":
+            break
+
+    pygame.quit()
+    sys.exit()
+
+
+if __name__ == "__main__":
+    main()
