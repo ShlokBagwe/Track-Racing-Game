@@ -83,7 +83,15 @@ class Abstract_Car:
         offset = (int(self.x - x), int(self.y - y))
         poi = mask.overlap(car_mask, offset)
         return poi
-        
+    
+
+    def collision_of_cars(self,comp_mask,x=0,y=0):
+        car_mask = pygame.mask.from_surface(self.car_img)
+        offset = (int(self.x - x),int(self.y - y))
+        poi = comp_mask.overlap(car_mask,offset)
+        return poi
+
+                    
     def reset(self):
         global count_signals
         self.angle = 0
@@ -128,7 +136,7 @@ class Player_Car(Abstract_Car):
 
         self.move()  # Reverse the direction and slow down 
 
-PATH = [(175, 119), (110, 70), (56, 133), (70, 481), (318, 731), (404, 680), (418, 521), (507, 475), (600, 551), (613, 715), (736, 713), (734, 399), (611, 357), (409, 343), (433, 257), (697, 258), (738, 123), (581, 71), (303, 78), (275, 377), (176, 388), (178, 280)]
+PATH = [(170, 110), (65, 90), (70, 481), (318, 731), (404, 680), (418, 521), (518, 465), (600, 535), (613, 715), (730, 710), (734, 399), (611, 357), (415, 343), (425, 257), (695, 245), (710, 95), (320, 45), (275, 150),(280,380),(176, 388), (178, 280)]
 
 class Computer_Car(Abstract_Car):
     car_img =  com_car
@@ -139,15 +147,24 @@ class Computer_Car(Abstract_Car):
         self.path = path
         self.current_point = 0
         self.starting_vel = max_velocity
+        self.store_vel = max_velocity
 
 
-    def draw_points(self, WIN):
-        for point in self.path:
-            pygame.draw.circle(WIN, (255, 0, 0), point, 5)
+    # def draw_points(self, WIN):
+    #     for point in self.path:
+    #         pygame.draw.circle(WIN, (255, 0, 0), point, 5)
 
-    def draw(self, WIN):
-        super().draw(WIN)
-        Computer_Car.draw_points(self,WIN)    # This was done to get the positions for movement of Computer_Car
+    # def draw(self, WIN):
+    #     super().draw(WIN)
+    #     Computer_Car.draw_points(self,WIN)    # This was done to get the positions for movement of Computer_Car
+    
+    def bounce(self):
+        if self.starting_vel>=1:
+            self.starting_vel = -self.starting_vel # since negative direction means going backward
+        elif self.starting_vel<=-1:
+            self.starting_vel = -self.starting_vel      # since positive direction means going forward
+
+        self.move()
 
 
     def calculate_angle(self):
@@ -301,7 +318,7 @@ def game_loop():
 
 
 
-        computer_car.draw_points(WIN)
+        # computer_car.draw_points(WIN)
 
         player_car.move_player_car()
         computer_car.move_computer_car()
@@ -309,12 +326,16 @@ def game_loop():
         if player_car.collide(track_border_mask) != None: #Since value is none when object isnt colliding
             player_car.bounce()
 
+        if computer_car.collide(track_border_mask) != None:
+            computer_car.bounce()
+
 
         computer_point_of_collision_finish = computer_car.collide(finish_line_mask,130,250)
         if computer_point_of_collision_finish != None:
             computer_car.reset()
             
-        
+
+
 
         player_point_of_collision_finish = player_car.collide(finish_line_mask,130,250)
         if player_point_of_collision_finish != None:
