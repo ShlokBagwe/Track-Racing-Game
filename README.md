@@ -5,7 +5,7 @@ A 2D top-down racing game built with **Python** and **Pygame**, featuring:
 
 - **Player** car with rotation, acceleration, and friction  
 - **Computer AI** car that follows a predefined waypoint path  
-- **Track boundary** collision (bounce back)  
+- **Track boundary** collision (bounce back) for both cars  
 - **Finish-line** detection (reset or bounce)  
 - **Main Menu** with Play, Options (placeholder), and Quit  
 - **3-2-1 Countdown** before the race starts  
@@ -39,7 +39,6 @@ Track\_Racing/
    ```bash
    python main.py
    ```
-
 3. **Navigate menus**:
 
    * **ENTER**: Start the race
@@ -81,7 +80,7 @@ Track\_Racing/
   3. Finish line
   4. Track border (collision mask)
   5. Player car
-  6. Computer car (with visible waypoints for debugging)
+  6. Computer car
 * **Player** input moves and rotates the car.
 * **Computer** car:
 
@@ -92,24 +91,50 @@ Track\_Racing/
 
 ### 3. Collision & Finish Line
 
-* `collide(mask, x, y)` uses Pygame masks for pixel-perfect detection.
-* On **track border collision**, cars bounce back.
-* On **finish line**:
+* **Track border collision** now applies to **both** cars:
 
-  * Player bounces if crossing from the wrong side, else resets start position.
-  * Computer always resets to its start position and path.
+  * If either car’s mask overlaps the track-border mask, that car bounces back.
+* **Finish line** detection:
 
-### 4. Utilities (`utils.py`)
+  * Player bounces or resets depending on crossing direction.
+  * Computer always resets its position and waypoint index.
 
-* `resize_image(image, factor)`: scales an image.
-* `rotate_center(win, image, topleft, angle)`: rotates about center and blits.
+### 4. Computer Path-Following (Custom Feature)
+
+* Defined a custom `PATH` of (x, y) waypoints tracing the track’s center.
+* The AI car:
+
+  1. **`calculate_angle()`**: smooth steering toward current waypoint.
+  2. **`update_path_point()`**: increments waypoint when the car reaches it.
+  3. **`move_computer_car()`**: calls the above and then moves the car each frame.
+* When the path index reaches the end, it wraps back to the start.
+
+### 5. Utilities (`utils.py`)
+
+* `resize_image(image, factor)`: scales an image by a given multiplier.
+* `rotate_center(win, image, topleft, angle)`: rotates an image about its center and blits to the window.
+
+---
+
+## 🔄 PATH (Computer Car Waypoints)
+
+```python
+PATH = [
+  (170,110), (65,90), (70,481), (318,731), (404,680),
+  (418,521), (518,465), (600,535), (613,715), (730,710),
+  (734,399), (611,357), (415,343), (425,257), (695,245),
+  (710,95), (320,45), (275,150), (280,380), (176,388),
+  (178,280)
+]
+```
+
+* Traces the center of the track; AI car follows these in a loop.
 
 ---
 
 ## 📌 Next Steps
 
 * Implement the **Options** submenu.
-* Add a **lap counter** and **timer** display.
 * Add **sound effects** and **background music**.
 * Create a **Game Over/Victory** screen with restart.
 
@@ -118,7 +143,6 @@ Track\_Racing/
 ## 📄 License & Credits
 
 * Inspired by [Tech With Tim’s Pygame Car Racer](https://github.com/techwithtim/Pygame-Car-Racer).
-* Assets and code are for learning and demonstration.
+* Custom AI path-following and dual-car collision are original enhancements.
 
-````
-
+```
