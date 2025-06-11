@@ -13,8 +13,17 @@ track = resize_image(pygame.image.load('Images/imgs/track.png'),  0.9)
 track_border     = resize_image(pygame.image.load('Images/imgs/track-border.png'),  0.9)
 track_border_mask = pygame.mask.from_surface(track_border)
 
-red_car          = resize_image(pygame.image.load('Images/imgs/red-car.png'), 0.55)
-com_car          = resize_image(pygame.image.load('Images/imgs/purple-car.png'), 0.55)
+
+red_car = resize_image(pygame.image.load('Images/imgs/red-car.png'), 0.55)
+red_car_option = resize_image(pygame.image.load('Images/imgs/red-car.png'), 2)
+
+green_car = resize_image(pygame.image.load('Images/imgs/green-car.png'),0.55)
+green_car_option = resize_image(pygame.image.load('Images/imgs/green-car.png'),2)
+
+grey_car = resize_image(pygame.image.load('Images/imgs/grey-car.png'),0.55)
+grey_car_option = resize_image(pygame.image.load('Images/imgs/grey-car.png'),2)
+
+com_car = resize_image(pygame.image.load('Images/imgs/purple-car.png'), 0.55)
 
 finish_line      = pygame.image.load('Images/imgs/finish.png')
 finish_line_mask = pygame.mask.from_surface(finish_line)
@@ -28,6 +37,12 @@ pygame.display.set_caption("Track Racing Game")
 
 run = True
 clock = pygame.time.Clock()  
+
+PLAYER_LAP_COUNT = 0
+COMPUTER_LAP_COUNT = 0
+
+WINNING_LAP = 3
+
 
 images = [
     (grass, (0, 0)),
@@ -107,7 +122,7 @@ class Abstract_Car:
 
 
 class Player_Car(Abstract_Car):
-    car_img= red_car
+    car_img= red_car        # after making option menu, This will be the default car if no car is chosen
     start_pos = (180,200)
 
 
@@ -136,11 +151,11 @@ class Player_Car(Abstract_Car):
 
         self.move()  # Reverse the direction and slow down 
 
-PATH = [(170, 110), (65, 90), (70, 481), (318, 731), (404, 680), (418, 521), (518, 465), (600, 535), (613, 715), (730, 710), (734, 399), (611, 357), (415, 343), (425, 257), (695, 245), (710, 95), (320, 45), (275, 150),(280,380),(176, 388), (178, 280)]
+PATH = [(165, 100), (75, 79), (70, 481), (318, 731), (408, 680), (410, 518), (518, 465), (600, 535), (613, 715), (730, 710), (734, 395), (611, 357), (415, 343), (425, 257), (695, 245), (710, 95), (320, 45), (275, 150),(280,380),(176, 388), (178, 280)]
 
 class Computer_Car(Abstract_Car):
     car_img =  com_car
-    start_pos = (150,200)
+    start_pos = (155,200)
 
     def __init__(self, max_velocity, rotating_velocity,path=[]):
         super().__init__(max_velocity, rotating_velocity)
@@ -148,7 +163,6 @@ class Computer_Car(Abstract_Car):
         self.current_point = 0
         self.starting_vel = max_velocity
         self.store_vel = max_velocity
-
 
     # def draw_points(self, WIN):
     #     for point in self.path:
@@ -218,22 +232,53 @@ def draw(WIN,images,player_car,computer_car):
     for image,pos in images:
         WIN.blit(image,pos)
 
+
     player_car.draw(WIN)
     computer_car.draw(WIN)
 
+
+    player_lap = LAP_FONT.render(f"Player Lap: {PLAYER_LAP_COUNT}", True, (255, 255,255),(0,0,0))  # convert int to string
+    computer_lap = LAP_FONT.render(f"Computer Lap: {COMPUTER_LAP_COUNT}", True, (255, 255, 255),(0,0,0)) 
+    WIN.blit(player_lap, (10, 700))
+    WIN.blit(computer_lap,(10,730))
+
+
     pygame.display.update()
 
+
+def draw_winning_screen(WIN):
+
+    WIN.fill((0,0,0))  
+
+
+    if PLAYER_LAP_COUNT == WINNING_LAP:
+        text = "YOU WON !!!"
+    elif COMPUTER_LAP_COUNT == WINNING_LAP:
+        text = "YOU LOST"
+    else:
+        return  # nobody has won yet
+
+
+    finishing_message = FONTS_NUM.render(text, True, (255, 255, 0))
+    x = (TRACK_WIDTH - finishing_message.get_width()) // 2
+    y = (TRACK_HEIGHT - finishing_message.get_height()) // 2
+    WIN.blit(finishing_message, (x, y))
+
+
+    pygame.display.update()
+    pygame.time.delay(4000)
+
+
 player_car = Player_Car(4,4) #Sends velocity and rotating velocity to _init_ of abstract car method (object)
-computer_car = Computer_Car(4,5.5,PATH)
-
-
+computer_car = Computer_Car(3.5,5.5,PATH)
 
 
 FONTS = pygame.font.SysFont("Comic Sans MS", 48)
 FONTS_NUM = pygame.font.SysFont("Impact",80)
+LAP_FONT = pygame.font.SysFont("Arial Black", 22)
 
 def draw_menu(WIN):
-    WIN.fill((0, 0, 0))  # Black background
+    WIN.fill((0, 0, 0))  
 
     label_play = FONTS.render("Press ENTER to Play", True, (255, 255, 255))
     label_options = FONTS.render("Press SPACE for Options", True, (255, 255, 255))
@@ -297,11 +342,11 @@ def draw_signals(WIN):
         count_signals+=1
 
  
-    
-
-
 def game_loop():
     run = True
+
+    global PLAYER_LAP_COUNT
+    global COMPUTER_LAP_COUNT
 
     while run:
         clock.tick(60)
@@ -316,9 +361,7 @@ def game_loop():
             if event.type == pygame.QUIT:
                 run = False
 
-
-
-        # computer_car.draw_points(WIN)
+        # computer_car.draw_points(WIN)     ..function call use to draw tracking points
 
         player_car.move_player_car()
         computer_car.move_computer_car()
@@ -331,21 +374,77 @@ def game_loop():
 
 
         computer_point_of_collision_finish = computer_car.collide(finish_line_mask,130,250)
-        if computer_point_of_collision_finish != None:
+
+        if computer_point_of_collision_finish is not None:
+            COMPUTER_LAP_COUNT += 1
+
             computer_car.reset()
+            if COMPUTER_LAP_COUNT == WINNING_LAP:
+                draw_winning_screen(WIN)
+                break
+
             
-
-
-
         player_point_of_collision_finish = player_car.collide(finish_line_mask,130,250)
         if player_point_of_collision_finish != None:
             if player_point_of_collision_finish[1] == 0:    #If Player tries to cross finish line from forward (the co-ordinate of y component is 0 at that position) then the player bounces back
                 player_car.bounce()
             else:
+                PLAYER_LAP_COUNT +=1
+
                 player_car.reset()
+                
+
+                if PLAYER_LAP_COUNT == WINNING_LAP:
+                    draw_winning_screen(WIN)
+                    break
+        
     
     player_car.reset_after_closure()
     computer_car.reset_after_closure()
+
+
+def draw_option_menu(WIN):
+    WIN.fill((10,10,30))
+    vehicles = [
+        (red_car_option,(TRACK_WIDTH//2-200,TRACK_HEIGHT//2)),
+        (green_car_option,(TRACK_WIDTH//2,TRACK_HEIGHT//2)),
+        (grey_car_option,(TRACK_WIDTH//2+200,TRACK_HEIGHT//2))
+    ]
+
+    option_font = FONTS.render("Select your Vehicle",1,(255,255,255))
+    WIN.blit(option_font,((TRACK_WIDTH - option_font.get_width()) // 2+30, TRACK_HEIGHT // 2 - 100))
+
+    car_rects = []
+
+    for vehicle, pos in vehicles:
+        WIN.blit(vehicle, pos)
+        rect = pygame.Rect(pos[0], pos[1], vehicle.get_width(), vehicle.get_height())
+        car_rects.append((rect, vehicle))  # Here storing both, the rectangle and the vehicle
+
+    pygame.display.update()
+
+    return car_rects
+
+    
+
+
+
+def option_loop():
+    clock = pygame.time.Clock()
+    while True:
+        car_rects = draw_option_menu(WIN)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "Quit"
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                for rect, vehicle_img in car_rects:
+                    if rect.collidepoint(mouse_pos):
+                        player_car.car_img = resize_image(vehicle_img,0.275)  
+                        return   
+        clock.tick(60)
 
 
 
@@ -355,7 +454,7 @@ def main():
         if choice == "Play":
             game_loop()
         elif choice == "Options":
-            print("Options not implemented yet.")
+            option_loop()
         elif choice == "Quit":
             break
 
