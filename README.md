@@ -44,4 +44,4 @@ The game's structure was redesigned for clarity and modularity, including the ab
 🙌 Credits
 Tutorial Base: Tech With Tim
 
-Enhancements & Additions: Game menu, lap system, countdown timer, vehicle selection, win/loss logic, and code architecture by Shlok Bagwe
+Enhancements & Additions: Game menu, lap system, countdown timer, vehicle selection, win/loss logic, and code architecture.
